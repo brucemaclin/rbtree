@@ -318,22 +318,62 @@ func (t *Tree) fixAfterDelete(node *Node) {
 	for node != t.root && t.isBlack(node) {
 		if node == parentOf(node).left {
 			sib := siblingOf(node)
+			/*
+						   black(p.left) = black(p.right)-1  --->  black(S.left) = black(S.right)-1 not balance should continue
+								P               S
+			                   / \    --->     / \
+							  N   s           p   SR
+			                                 / \
+											N   SL
+			*/
 			if !t.isBlack(sib) {
 				t.setColor(sib, black)
 				t.setColor(parentOf(node), red)
 				parentOf(node).rotateLeft()
 				sib = parentOf(node).right
 			}
+			/*
+						       black(P.left) = black(P.right)-1 --> black(P.left) = black(P.right) path through p lose one black node,should check node P
+								P                  P
+							   / \	              / \
+			                  N   S    --->      N   s
+							     / \                / \
+								SL  SR             SL  SR
+
+								or                 p                   p
+			                                      / \                 / \
+								                 N   S      -->      N   s      also need to  check node p(set node p black)
+												    / \                 / \
+												   SL  SR	           SL  SR
+			*/
 			if t.isBlack(leftOf(sib)) && t.isBlack(rightOf(sib)) {
 				t.setColor(sib, red)
 				node = parentOf(node)
 			} else {
+				/*
+				                            p?              p?
+				                           / \             / \
+										  N   S    --->   N   SL
+										     / \               \
+											sl  SR              s
+											                     \
+																  SR
+
+				*/
 				if t.isBlack(rightOf(sib)) {
 					t.setColor(sib, red)
 					t.setColor(leftOf(sib), black)
 					sib.rotateRight()
 					sib = rightOf(parentOf(node))
 				}
+				/*
+										p?                    s?
+				                       / \                   / \
+									  N   S        --->     P   SR
+									     / \               / \
+										SL  sr            N   SL
+
+				*/
 				t.setColor(sib, parentOf(node).color)
 				t.setColor(rightOf(sib), black)
 				t.setColor(parentOf(node), black)
